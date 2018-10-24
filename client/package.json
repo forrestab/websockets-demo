@@ -1,0 +1,10 @@
+{
+  "name": "client",
+  "private": true,
+  "scripts": {
+    "serve": "http-server ./src -a localhost -o"
+  },
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html>
+    <head>
+        <title>WebSockets Demo</title>
+        <style>
+            *, ::before, ::after { box-sizing: border-box; }
+            html { font-family: sans-serif; line-height: 1.15; }
+            body {
+                color: #212529;
+                font-family: 
+                    -apple-system, 
+                    BlinkMacSystemFont, 
+                    "Segoe UI", 
+                    Roboto, 
+                    "Helvetica Neue", 
+                    Arial, 
+                    sans-serif;
+                font-size: 1rem;
+            }
+
+            textarea { width: 100%; }
+            ul { list-style: none; padding: 0; }
+            ul li:not(:last-child) { padding-bottom: calc(1rem / 3); }
+
+            .alert { color: #fff; padding: calc(1rem / 2); }
+            .danger { background-color: #E53935; }
+            .info { background-color: #1E88E5; }
+
+            .message-type { font-style: italic; text-transform: uppercase; }
+        </style>
+    </head>
+    <body>
+        <main>
+            <h1>WebSockets Demo</h1>
+            
+            <ul id="messages"></ul>
+
+            <form id="message-form" action="#" method="POST">
+                <p>
+                    <textarea 
+                        id="message" 
+                        placeholder="Write your message here..." 
+                        required></textarea>
+                </p>
+                <button type="submit">Send</button>
+                <button type="button" id="close">Close</button>
+            </form>
+
+            <p id="status"></p>
+        </main>
+
+        <script>
+            window.onload = function() {
+                var $form = document.getElementById("message-form");
+                var $messageField = document.getElementById("message");
+                var $messages = document.getElementById("messages");
+                var $status = document.getElementById("status");
+                var $closeButton = document.getElementById("close");
+
+                var socket = new WebSocket("ws://localhost:1337/echo/");
+
+                socket.onopen = function(event) {
+                    showInfo("Connected to " + event.currentTarget.url);
+                };
+
+                socket.onerror = function(error) {
+                    showError("WebSocket Error: " + error);
+                };
+
+                socket.onmessage = function(event) {
+                    updateMessages("Received", event.data);
+                };
+
+                socket.onclose = function(event) {
+                    showInfo("Disconnected from WebSocket.");
+                };
+
+                $form.onsubmit = buttonEventHandler(function() {
+                    var message = $messageField.value;
+
+                    socket.send(message);
+                    updateMessages("Sent", message);
+                    $messageField.value = "";
+                });
+
+                $closeButton.onclick = buttonEventHandler(function() {
+                    socket.close();
+                });
+
+                function showError(message) {
+                    $status.classList.add("danger");
+                    updateStatus(message);
+                }
+
+                var showError = show("danger");
+                var showInfo = show("info");
+
+                function show(cssClass) {
+                    return function(message) {
+                        $status.className = "alert " + cssClass;
+                        $status.innerHTML = message;
+                    };
+                }
+
+                function updateMessages(direction, message) {
+                    $messages.innerHTML += "<li><span class=\"message-type\">" + direction + ":</span> " + message + "</li>";
+                }
+
+                function buttonEventHandler(callback) {
+                    return function(event) {
+                        event.preventDefault();
+
+                        callback();
+
+                        return false;
+                    }
+                }
+            };
+        </script>
+    </body>
+</html>
